@@ -163,3 +163,7 @@ Confirm:
 - **VLANs allowed:** 10,20
 - **Native VLAN:** 1
 - **Spanning Tree State:** forwarding
+
+> VLAN 10 and 20 were created and assigned to access ports Fa0/1 and Fa0/2 respectively.<br>
+> Gi0/1 was configured as a trunk port to carry tagged VLAN traffic to the router. <br>
+> Trunking was verified using show interface switchport and show interfaces trunk, confirming proper inter-VLAN forwarding capability.
