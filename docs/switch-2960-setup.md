@@ -2,11 +2,11 @@
 
 ## Purpose
 
-This guide walks you through the physical connection, console access, and core configuration steps required to prepare a Cisco 2960 switch for the NetDefend Lab environment.
+This guide walks you through the physical connection, console access, and core configuration steps required to prepare a Cisco 2960 switch for the NetDefend environment.
 
 ## Physical Connection
 1. Connect a Cisco console cable (RJ-45 to USB adapter) from your PC/Laptop to the **Console** port on the 2960
-2. Power on the router; observe LEDs next to the console port
+2. Power on the switch; observe LEDs next to the console port
 3. Proceed to your Device Manager and check for:
     - Serial Line (e.g., COM1, COM2, COM3)
     - Bits per second (Speed)
@@ -76,7 +76,7 @@ Once you have skipped the initial dialog and returned to the `Switch>` prompt, y
     - This command creates (or enters) VLAN 10 in the VLAN database.
     - The prompt changes to Switch(config-vlan)#, showing you are editing VLAN 10’s properties.
 2. **Name VLAN 10**
-   Still at `Switch(config-vlan)#`. enter:
+   Still at `Switch(config-vlan)#`, enter:
    ```cmd
    Switch(config-vlan)# name INTERNAL
    ```
@@ -97,3 +97,69 @@ At `Switch(config)#`, add VLAN 20:
    ```
    
 ![image](https://github.com/user-attachments/assets/5aefc7f0-2dbb-472d-ac4c-59fe49b0aacf)
+
+### 4. Assign Access Ports to VLANs
+From global configuration mode, assign switchports to VLANs:
+**Assign Fa0/1 to VLAN 10 (e.g., Laptop)**
+```cmd
+Switch(config)# interface range FastEthernet0/1
+Switch(config-if-range)# switchport mode access
+Switch(config-if-range)# switchport access vlan 10
+Switch(config-if-range)# exit
+```
+**Assign Fa0/2 to VLAN 20** (e.g., Raspberry Pi)
+```cmd
+Switch(config)# interface range FastEthernet0/2
+Switch(config-if-range)# switchport mode access
+Switch(config-if-range)# switchport access vlan 20
+Switch(config-if-range)# exit
+```
+Use the following command to verify that interfaces are assigned correctly:
+```cmd
+Switch# show vlan brief
+```
+You should see `Fa0/1` under VLAN 10 and `Fa0/2` under VLAN 20.
+
+### 5. Configure Trunk Port to Router
+To enable inter-VLAN routing between VLAN 10 and VLAN 20 via an external router (e.g., Cisco 1841), configure the trunk:
+```cmd
+Switch(config)# interface GigabitEthernet0/1
+Switch(config-if)# switchport mode trunk
+Switch(config-if)# switchport trunk allowed vlan 10,20
+Switch(config-if)# no shutdown
+Switch(config-if)# exit
+Switch(config)# end
+```
+Save your configuration:
+```cmd
+Switch# write memory
+```
+Expected console confirmation: <br>
+![image](https://github.com/user-attachments/assets/dfae932d-1a54-40a0-a54c-479d2601ef23)
+
+### 6. Verify Trunk Operation
+Use the following commands to confirm that trunking is enabled and VLANs are active on the trunk port:
+**Command 1: Interface Switchport Details**
+```cmd
+Switch# show interface GigabitEthernet0/1 switchport
+```
+![image](https://github.com/user-attachments/assets/58a7371c-56c8-46ad-b88e-113322325710)
+
+Verify:
+- **Administrative Mode:** trunk
+- **Operational Mode:** trunk
+- **Trunking VLANs Enabled:** 10,20
+- **Encapsulation:** dot1q
+- **Native VLAN:** 1
+
+**Switch# show interface GigabitEthernet0/1 switchport**
+```cmd
+Switch# show interfaces trunk
+```
+![image](https://github.com/user-attachments/assets/f482b8f1-ffec-4b51-9e7f-e7160cfd599a)
+
+Confirm:
+- Port Gi0/1 is **trunking**
+- **VLANs allowed:** 10,20
+- **Native VLAN:** 1
+- **Spanning Tree State:** forwarding
